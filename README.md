@@ -6,6 +6,10 @@
 [![](https://github.com/enjoy-digital/litex/workflows/ci/badge.svg)](https://github.com/enjoy-digital/litex/actions)
 ![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)
 
+# Nota Bene
+
+This fork of the LiteX repository will eventually support our HBM revision of LiteDRAM. The purpose of forking this repository is to allow for a potential clean pull request to the main LiteX branch which will automatically integrate our HBM code. The only files we will need to edit in this repository are various support files (to add HBM functions) and the setup files that add the submodules to the repository.
+
 # Welcome to LiteX!
 
 
