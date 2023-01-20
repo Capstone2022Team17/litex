@@ -487,7 +487,10 @@ class VexRiscvSMP(CPU):
 
         # When no Direct Memory Bus, do memory accesses through Wishbone Peripheral Bus.
         if len(self.memory_buses) == 0:
-            VexRiscvSMP.wishbone_memory = True
+            if VexRiscvSMP.with_fpu and (not VexRiscvSMP.wishbone_memory and not VexRiscvSMP.wishbone_force_32b):
+                raise ValueError("No Direct Memory Bus found, please add --with-wishbone-memory or --wishbone-force-32b to your build command.")
+            else:
+                VexRiscvSMP.wishbone_memory = True
 
         # Generate cluster name.
         VexRiscvSMP.generate_cluster_name()
