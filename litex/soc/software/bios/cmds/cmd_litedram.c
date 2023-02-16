@@ -98,11 +98,18 @@ static void hbm_write_hbm_test(int nb_params, char **params)
 {
 	char *c;
 	int address;
-	int data;
-	int strb = 32;
+	int data1 = 0;
+	int data2 = 0;
+	int data3 = 0;
+	int data4 = 0;
+	int data5 = 0;
+	int data6 = 0;
+	int data7 = 0;
+	int data8 = 0;
+	int strb = 0xffffffff;
 	// Random turned to 0
 	if (nb_params < 2) {
-		printf("hbm_write <address> <data> [strb=32(default)]");
+		printf("hbm_write_fsm <address> <data x 6> [strb=0xffffffff(default)]");
 		return;
 	} 
 	address = strtoul(params[0], &c, 0);
@@ -110,23 +117,133 @@ static void hbm_write_hbm_test(int nb_params, char **params)
 		printf("Incorrect address");
 		return;
 	}
-	data = strtoul(params[1], &c, 0);
+	data6 = strtoul(params[1], &c, 0);
 	if (*c != 0) {
-		printf("Incorrect data");
+		printf("Incorrect data1");
 		return;
 	}
+	data5 = strtoul(params[2], &c, 0);
+	if (*c != 0) {
+		printf("Incorrect data2");
+		return;
+	}
+	data4 = strtoul(params[3], &c, 0);
+	if (*c != 0) {
+		printf("Incorrect data3");
+		return;
+	}
+	data3 = strtoul(params[4], &c, 0);
+	if (*c != 0) {
+		printf("Incorrect data4");
+		return;
+	}
+	data2 = strtoul(params[5], &c, 0);
+	if (*c != 0) {
+		printf("Incorrect data5");
+		return;
+	}
+	data1 = strtoul(params[6], &c, 0);
+	if (*c != 0) {
+		printf("Incorrect data6");
+		return;
+	}
+	
 
-	if (nb_params > 2) {
-		strb = strtoul(params[1], &c, 0);
+	if (nb_params > 7) {
+		strb = strtoul(params[7], &c, 0);
 		if (*c != 0) {
 			printf("Incorrect strb");
 			return;
 		}
 	}
-	hbm_write_fsm(data, address, strb);
+	hbm_write_fsm(data1, data2, data3, data4, data5, data6, data7, data8, address, strb);
 }
 define_command(hbm_write_fsm, hbm_write_hbm_test, "Write once to hbm", LITEDRAM_CMDS);
 #endif
+
+// /**
+//  * Command *write_hbm_test"
+//  * 
+//  * Run a write to hbm once
+//  * 
+//  *
+// */
+// #if defined(CSR_HBM_4_BASE)
+// static void hbm_writeread_hbm_test(int nb_params, char **params)
+// {
+// 	char *c;
+// 	int address;
+// 	int data1 = 0;
+// 	int data2 = 0;
+// 	int data3 = 0;
+// 	int data4 = 0;
+// 	int data5 = 0;
+// 	int data6 = 0;
+// 	int data7 = 0;
+// 	int data8 = 0;
+// 	int strb = 0xf;
+// 	// Random turned to 0
+// 	if (nb_params < 2) {
+// 		printf("hbm_write <address> <data x 8> [strb=0xf(default)]");
+// 		return;
+// 	} 
+// 	address = strtoul(params[0], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect address");
+// 		return;
+// 	}
+// 	data1 = strtoul(params[1], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data1");
+// 		return;
+// 	}
+// 	data2 = strtoul(params[2], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data2");
+// 		return;
+// 	}
+// 	data3 = strtoul(params[3], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data3");
+// 		return;
+// 	}
+// 	data4 = strtoul(params[4], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data4");
+// 		return;
+// 	}
+// 	data5 = strtoul(params[5], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data5");
+// 		return;
+// 	}
+// 	data6 = strtoul(params[6], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data6");
+// 		return;
+// 	}
+// 	data7 = strtoul(params[7], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data7");
+// 		return;
+// 	}
+// 	data8 = strtoul(params[8], &c, 0);
+// 	if (*c != 0) {
+// 		printf("Incorrect data8");
+// 		return;
+// 	}
+
+// 	if (nb_params > 2) {
+// 		strb = strtoul(params[9], &c, 0);
+// 		if (*c != 0) {
+// 			printf("Incorrect strb");
+// 			return;
+// 		}
+// 	}
+// 	hbm_writeread_fsm(data1, data2, data3, data4, data5, data6, data7, data8, address, strb);
+// }
+// define_command(hbm_writeread_fsm, hbm_writeread_hbm_test, "Write once to hbm", LITEDRAM_CMDS);
+// #endif
 
 /**
  * Command "hbm_gen_tester"
@@ -184,46 +301,6 @@ static void sdram_bist_handler(int nb_params, char **params)
 	sdram_bist(burst_length, random);
 }
 define_command(sdram_bist, sdram_bist_handler, "Run SDRAM Build-In Self-Test", LITEDRAM_CMDS);
-#endif
-
-/**
- * Command "sdram_hw_test"
- *
- * Run SDRAM HW-accelerated memtest
- *
- */
-#if defined(CSR_SDRAM_GENERATOR_BASE) && defined(CSR_SDRAM_CHECKER_BASE)
-static void sdram_hw_test_handler(int nb_params, char **params)
-{
-	char *c;
-	uint64_t origin;
-	uint64_t size;
-	uint64_t burst_length = 1;
-	if (nb_params < 2) {
-		printf("sdram_hw_test <origin> <size> [<burst_length>]");
-		return;
-	}
-	origin = strtoull(params[0], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect origin");
-		return;
-	}
-	size = strtoull(params[1], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect size");
-		return;
-	}
-	if (nb_params > 2) {
-		burst_length = strtoull(params[2], &c, 0);
-		if (*c != 0) {
-			printf("Incorrect burst length");
-			return;
-		}
-	}
-	int errors = sdram_hw_test(origin, size, burst_length);
-	printf("%d errors found\n", errors);
-}
-define_command(sdram_hw_test, sdram_hw_test_handler, "Run SDRAM HW-accelerated memtest", LITEDRAM_CMDS);
 #endif
 
 #ifdef CSR_DDRPHY_RDPHASE_ADDR

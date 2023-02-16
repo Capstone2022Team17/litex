@@ -60,13 +60,20 @@ void whatstateamI() {
     if (hbm_4_doneread_fsm_read()) {printf("FSM: Done with read\n"); }
 }
 
-void hbm_write_fsm(uint32_t data, uint32_t address, uint32_t strb) {
+void hbm_write_fsm(uint32_t data1, uint32_t data2, uint32_t data3, uint32_t data4, uint32_t data5, uint32_t data6, uint32_t data7, uint32_t data8, uint32_t address, uint32_t strb) {
     hbm_4_acknowledge_readwrite_write(0);
     hbm_4_address_readwrite_write(address);
-    hbm_4_data_writein_write(data);
+    hbm_4_data_writein1_write(data1);
+    hbm_4_data_writein2_write(data2);
+    hbm_4_data_writein3_write(data3);
+    hbm_4_data_writein4_write(data4);
+    hbm_4_data_writein5_write(data5);
+    hbm_4_data_writein6_write(data6);
+    hbm_4_data_writein7_write(data7);
+    hbm_4_data_writein8_write(data8);
     hbm_4_strb_readwrite_write(strb);
     cdelay(100);
-    printf("Set up variables, csrs: data: %08x, address: %08x, strb: %08x\n", hbm_4_data_writein_read(), hbm_4_address_readwrite_read(), hbm_4_strb_readwrite_read());
+    printf("Set up variables, csrs: data: %08x, %08x, %08x, %08x, %08x, %08x, %08x, %08x, address: %08x, strb: %08x\n", hbm_4_data_writein8_read(), hbm_4_data_writein7_read(), hbm_4_data_writein6_read(), hbm_4_data_writein5_read(), hbm_4_data_writein4_read(), hbm_4_data_writein3_read(), hbm_4_data_writein2_read(), hbm_4_data_writein1_read(),hbm_4_address_readwrite_read(), hbm_4_strb_readwrite_read());
     printf("Started perform write, waiting for response\n");
     hbm_4_perform_write_write(1);
     cdelay(100);
