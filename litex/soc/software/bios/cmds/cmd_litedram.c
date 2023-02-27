@@ -94,22 +94,23 @@ define_command(hbm_read_fsm, hbm_read_hbm_test, "Read once to hbm", LITEDRAM_CMD
  *
 */
 #if defined(CSR_HBM_4_BASE)
-static void hbm_write_hbm_test(int nb_params, char **params)
+static void hbm_test_readwrite(int nb_params, char **params)
 {
 	char *c;
 	int address;
-	int data1 = 0;
-	int data2 = 0;
-	int data3 = 0;
-	int data4 = 0;
-	int data5 = 0;
-	int data6 = 0;
-	int data7 = 0;
-	int data8 = 0;
+	int addr_offset;
+	// int data1 = 0;
+	// int data2 = 0;
+	// int data3 = 0;
+	// int data4 = 0;
+	// int data5 = 0;
+	// int data6 = 0;
+	// int data7 = 0;
+	// int data8 = 0;
 	int strb = 0xffffffff;
 	// Random turned to 0
 	if (nb_params < 2) {
-		printf("hbm_write_fsm <address> <data x 6> [strb=0xffffffff(default)]");
+		printf("hbm_write_fsm <address> <addr_offset> [strb=0xffffffff(default)]");
 		return;
 	} 
 	address = strtoul(params[0], &c, 0);
@@ -117,48 +118,53 @@ static void hbm_write_hbm_test(int nb_params, char **params)
 		printf("Incorrect address");
 		return;
 	}
-	data6 = strtoul(params[1], &c, 0);
+	addr_offset = strtoul(params[1], &c, 0);
 	if (*c != 0) {
-		printf("Incorrect data1");
+		printf("Incorrect address offset");
 		return;
 	}
-	data5 = strtoul(params[2], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect data2");
-		return;
-	}
-	data4 = strtoul(params[3], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect data3");
-		return;
-	}
-	data3 = strtoul(params[4], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect data4");
-		return;
-	}
-	data2 = strtoul(params[5], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect data5");
-		return;
-	}
-	data1 = strtoul(params[6], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect data6");
-		return;
-	}
+	// data6 = strtoul(params[1], &c, 0);
+	// if (*c != 0) {
+	// 	printf("Incorrect data1");
+	// 	return;
+	// }
+	// data5 = strtoul(params[2], &c, 0);
+	// if (*c != 0) {
+	// 	printf("Incorrect data2");
+	// 	return;
+	// }
+	// data4 = strtoul(params[3], &c, 0);
+	// if (*c != 0) {
+	// 	printf("Incorrect data3");
+	// 	return;
+	// }
+	// data3 = strtoul(params[4], &c, 0);
+	// if (*c != 0) {
+	// 	printf("Incorrect data4");
+	// 	return;
+	// }
+	// data2 = strtoul(params[5], &c, 0);
+	// if (*c != 0) {
+	// 	printf("Incorrect data5");
+	// 	return;
+	// }
+	// data1 = strtoul(params[6], &c, 0);
+	// if (*c != 0) {
+	// 	printf("Incorrect data6");
+	// 	return;
+	// }
 	
 
-	if (nb_params > 7) {
-		strb = strtoul(params[7], &c, 0);
+	if (nb_params > 2) {
+		strb = strtoul(params[2], &c, 0);
 		if (*c != 0) {
 			printf("Incorrect strb");
 			return;
 		}
 	}
-	hbm_write_fsm(data1, data2, data3, data4, data5, data6, data7, data8, address, strb);
+	hbm_test(address, addr_offset);
 }
-define_command(hbm_write_fsm, hbm_write_hbm_test, "Write once to hbm", LITEDRAM_CMDS);
+define_command(hbm_test, hbm_test_readwrite, "Write once to hbm", LITEDRAM_CMDS);
 #endif
 
 // /**
