@@ -9,7 +9,7 @@
 
 #include <liblitedram/hbm_bist.h>
 
-#define TOTAL_PORTS 28
+#define TOTAL_PORTS 32
 
 __attribute__((unused)) static void cdelay(int i)
 {
@@ -159,6 +159,40 @@ VoidFuncInt acknowledge_readwrite[] = {
                         hbm_29_acknowledge_readwrite_write,
                         hbm_30_acknowledge_readwrite_write,
                         hbm_31_acknowledge_readwrite_write};
+
+VoidFuncInt burst_length_write[] = {
+                        hbm_0_burst_len_write,
+                        hbm_1_burst_len_write,
+                        hbm_2_burst_len_write,
+                        hbm_3_burst_len_write,
+                        hbm_4_burst_len_write,
+                        hbm_5_burst_len_write,
+                        hbm_6_burst_len_write,
+                        hbm_7_burst_len_write,
+                        hbm_8_burst_len_write,
+                        hbm_9_burst_len_write,
+                        hbm_10_burst_len_write,
+                        hbm_11_burst_len_write,
+                        hbm_12_burst_len_write,
+                        hbm_13_burst_len_write,
+                        hbm_14_burst_len_write,
+                        hbm_15_burst_len_write,
+                        hbm_16_burst_len_write,
+                        hbm_17_burst_len_write,
+                        hbm_18_burst_len_write,
+                        hbm_19_burst_len_write,
+                        hbm_20_burst_len_write,
+                        hbm_21_burst_len_write,
+                        hbm_22_burst_len_write,
+                        hbm_23_burst_len_write,
+                        hbm_24_burst_len_write,
+                        hbm_25_burst_len_write,
+                        hbm_26_burst_len_write,
+                        hbm_27_burst_len_write,
+                        hbm_28_burst_len_write,
+                        hbm_29_burst_len_write,
+                        hbm_30_burst_len_write,
+                        hbm_31_burst_len_write};
 
 VoidFuncInt address_readwrite[] = {
                         hbm_0_address_readwrite_write, 
@@ -371,24 +405,36 @@ IntFuncVoid data_read[] = {
                         hbm_31_data_readout8_read, hbm_31_data_readout7_read, hbm_31_data_readout6_read, hbm_31_data_readout5_read, hbm_31_data_readout4_read, hbm_31_data_readout3_read, hbm_31_data_readout2_read, hbm_31_data_readout1_read};
 
 // Run all state machines for all hbm ports once to write and read.
-void hbm_test(uint32_t address, uint32_t addr_offset) {
+void hbm_test(uint32_t address, uint32_t addr_offset, uint32_t burst_length) {
 
     // Perform Write
     for (int i = 0; i < sizeof(acknowledge_readwrite) / sizeof(*acknowledge_readwrite); i++)
     {
         acknowledge_readwrite[i](0);
     }
+    printf("Ack done\n");
+
+    for (int i = 0; i < sizeof(burst_length_write) / sizeof(*burst_length_write); i++)
+    {
+        burst_length_write[i](burst_length);
+    }
+    printf("burst done\n");
 
     for (int i = 0; i < sizeof(address_readwrite) / sizeof(*address_readwrite); i++)
     {
         address_readwrite[i](address);
         address += addr_offset;
     }
+
+    printf("Address done\n");
+
     printf("Started perform write, waiting for response\n");
     for (int i = 0; i < sizeof(perform_write) / sizeof(*perform_write); i++)
     {
         perform_write[i](1);
     }
+
+    printf("perf done\n");
 
     int func_running_flag = 0;
     while (func_running_flag < TOTAL_PORTS) {
@@ -406,10 +452,15 @@ void hbm_test(uint32_t address, uint32_t addr_offset) {
     {
         perform_write[i](0);
     }
+
+    printf("Perf2 done\n");
+
     for (int i = 0; i < sizeof(acknowledge_readwrite) / sizeof(*acknowledge_readwrite); i++)
     {
         acknowledge_readwrite[i](1);
     }
+
+    printf("ack done\n");
 
     // Delay 500 ms
     cdelay(500);
@@ -420,11 +471,15 @@ void hbm_test(uint32_t address, uint32_t addr_offset) {
         acknowledge_readwrite[i](0);
     }
 
+    printf("ack3 done\n");
+
     printf("Started perform read, waiting for response\n");
     for (int i = 0; i < sizeof(perform_read) / sizeof(*perform_read); i++)
     {
         perform_read[i](1);
     }
+
+    printf("perform read done\n");
 
     func_running_flag = 0;
     while (func_running_flag < TOTAL_PORTS) {
@@ -452,6 +507,7 @@ void hbm_test(uint32_t address, uint32_t addr_offset) {
         data_read[i + 7]());
         index++;
     }
+    printf("Data read done\n");
 
     // Restore state machine back to wait state
     for (int i = 0; i < sizeof(perform_read) / sizeof(*perform_read); i++)

@@ -20,7 +20,7 @@ from litex.soc.interconnect.axi.axi_stream import AXIStreamInterface
 # AXI Definition -----------------------------------------------------------------------------------
 
 def ax_description(address_width, version="axi4"):
-    len_width  = {"axi3":4, "axi4":8}[version]
+    len_width  = {"axi3":4, "axi4":12}[version] # Temp change from "axi4":8
     size_width = {"axi3":4, "axi4":3}[version]
     lock_width = {"axi3":2, "axi4":1}[version]
     # * present for interconnect with others cores but not used by LiteX.

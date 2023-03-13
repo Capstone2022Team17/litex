@@ -75,10 +75,12 @@ class XilinxClocking(Module, AutoCSR):
             for clkfbout_mult in reversed(range(*self.clkfbout_mult_frange)):
                 all_valid = True
                 vco_freq = self.clkin_freq*clkfbout_mult/divclk_divide
+                print("Vco_freq", vco_freq)
                 (vco_freq_min, vco_freq_max) = self.vco_freq_range
                 if (vco_freq >= vco_freq_min*(1 + self.vco_margin) and
                     vco_freq <= vco_freq_max*(1 - self.vco_margin)):
                     for n, (clk, f, p, m) in sorted(self.clkouts.items()):
+                        print(self.clkouts.items())
                         valid = False
                         d_ranges = [self.clkout_divide_range]
                         if getattr(self, "clkout{}_divide_range".format(n), None) is not None:

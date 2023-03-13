@@ -99,6 +99,7 @@ static void hbm_test_readwrite(int nb_params, char **params)
 	char *c;
 	int address;
 	int addr_offset;
+	int burst_length = 0;
 	// int data1 = 0;
 	// int data2 = 0;
 	// int data3 = 0;
@@ -107,10 +108,9 @@ static void hbm_test_readwrite(int nb_params, char **params)
 	// int data6 = 0;
 	// int data7 = 0;
 	// int data8 = 0;
-	int strb = 0xffffffff;
 	// Random turned to 0
 	if (nb_params < 2) {
-		printf("hbm_write_fsm <address> <addr_offset> [strb=0xffffffff(default)]");
+		printf("hbm_test <address> <addr_offset> [burst_length=0]");
 		return;
 	} 
 	address = strtoul(params[0], &c, 0);
@@ -123,46 +123,14 @@ static void hbm_test_readwrite(int nb_params, char **params)
 		printf("Incorrect address offset");
 		return;
 	}
-	// data6 = strtoul(params[1], &c, 0);
-	// if (*c != 0) {
-	// 	printf("Incorrect data1");
-	// 	return;
-	// }
-	// data5 = strtoul(params[2], &c, 0);
-	// if (*c != 0) {
-	// 	printf("Incorrect data2");
-	// 	return;
-	// }
-	// data4 = strtoul(params[3], &c, 0);
-	// if (*c != 0) {
-	// 	printf("Incorrect data3");
-	// 	return;
-	// }
-	// data3 = strtoul(params[4], &c, 0);
-	// if (*c != 0) {
-	// 	printf("Incorrect data4");
-	// 	return;
-	// }
-	// data2 = strtoul(params[5], &c, 0);
-	// if (*c != 0) {
-	// 	printf("Incorrect data5");
-	// 	return;
-	// }
-	// data1 = strtoul(params[6], &c, 0);
-	// if (*c != 0) {
-	// 	printf("Incorrect data6");
-	// 	return;
-	// }
-	
-
 	if (nb_params > 2) {
-		strb = strtoul(params[2], &c, 0);
+		burst_length = strtoul(params[2], &c, 0);
 		if (*c != 0) {
-			printf("Incorrect strb");
+			printf("Incorrect burst_length");
 			return;
 		}
 	}
-	hbm_test(address, addr_offset);
+	hbm_test(address, addr_offset, burst_length);
 }
 define_command(hbm_test, hbm_test_readwrite, "Write once to hbm", LITEDRAM_CMDS);
 #endif
