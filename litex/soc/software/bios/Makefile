@@ -11,6 +11,7 @@ OBJECTS = boot-helper.o	\
 	  helpers.o			\
 	  cmd_bios.o		\
 	  cmd_mem.o			\
+	  cmd_hbm.o         \
 	  cmd_boot.o		\
 	  cmd_i2c.o			\
 	  cmd_spiflash.o	\

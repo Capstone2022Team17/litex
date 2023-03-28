@@ -14,7 +14,6 @@
 #include <liblitedram/sdram.h>
 #include <liblitedram/sdram_spd.h>
 #include <liblitedram/bist.h>
-#include <liblitedram/hbm_bist.h>
 
 #include "../command.h"
 #include "../helpers.h"
@@ -58,193 +57,6 @@ static void sdram_test_handler(int nb_params, char **params)
 }
 define_command(sdram_test, sdram_test_handler, "Test SDRAM", LITEDRAM_CMDS);
 #endif
-
-/**
- * Command *read_hbm_test*
- * 
- * Run a read to hbm once
- * 
-*/
-
-#if defined(CSR_HBM_4_BASE)
-static void hbm_read_hbm_test(int nb_params, char **params) 
-{
-	char *c;
-	int address;
-	if (nb_params < 1) {
-		printf("hbm_read <address>");
-		return;
-	}
-	address = strtoul(params[0], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect address");
-		return;
-	}
-
-	hbm_read_fsm(address);
-}
-define_command(hbm_read_fsm, hbm_read_hbm_test, "Read once to hbm", LITEDRAM_CMDS);
-#endif
-
-/**
- * Command *write_hbm_test"
- * 
- * Run a write to hbm once
- * 
- *
-*/
-#if defined(CSR_HBM_4_BASE)
-static void hbm_test_readwrite(int nb_params, char **params)
-{
-	char *c;
-	int address;
-	int addr_offset;
-	int burst_length = 0;
-	// int data1 = 0;
-	// int data2 = 0;
-	// int data3 = 0;
-	// int data4 = 0;
-	// int data5 = 0;
-	// int data6 = 0;
-	// int data7 = 0;
-	// int data8 = 0;
-	// Random turned to 0
-	if (nb_params < 2) {
-		printf("hbm_test <address> <addr_offset> [burst_length=0]");
-		return;
-	} 
-	address = strtoul(params[0], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect address");
-		return;
-	}
-	addr_offset = strtoul(params[1], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect address offset");
-		return;
-	}
-	if (nb_params > 2) {
-		burst_length = strtoul(params[2], &c, 0);
-		if (*c != 0) {
-			printf("Incorrect burst_length");
-			return;
-		}
-	}
-	hbm_test(address, addr_offset, burst_length);
-}
-define_command(hbm_test, hbm_test_readwrite, "Write once to hbm", LITEDRAM_CMDS);
-#endif
-
-// /**
-//  * Command *write_hbm_test"
-//  * 
-//  * Run a write to hbm once
-//  * 
-//  *
-// */
-// #if defined(CSR_HBM_4_BASE)
-// static void hbm_writeread_hbm_test(int nb_params, char **params)
-// {
-// 	char *c;
-// 	int address;
-// 	int data1 = 0;
-// 	int data2 = 0;
-// 	int data3 = 0;
-// 	int data4 = 0;
-// 	int data5 = 0;
-// 	int data6 = 0;
-// 	int data7 = 0;
-// 	int data8 = 0;
-// 	int strb = 0xf;
-// 	// Random turned to 0
-// 	if (nb_params < 2) {
-// 		printf("hbm_write <address> <data x 8> [strb=0xf(default)]");
-// 		return;
-// 	} 
-// 	address = strtoul(params[0], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect address");
-// 		return;
-// 	}
-// 	data1 = strtoul(params[1], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data1");
-// 		return;
-// 	}
-// 	data2 = strtoul(params[2], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data2");
-// 		return;
-// 	}
-// 	data3 = strtoul(params[3], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data3");
-// 		return;
-// 	}
-// 	data4 = strtoul(params[4], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data4");
-// 		return;
-// 	}
-// 	data5 = strtoul(params[5], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data5");
-// 		return;
-// 	}
-// 	data6 = strtoul(params[6], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data6");
-// 		return;
-// 	}
-// 	data7 = strtoul(params[7], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data7");
-// 		return;
-// 	}
-// 	data8 = strtoul(params[8], &c, 0);
-// 	if (*c != 0) {
-// 		printf("Incorrect data8");
-// 		return;
-// 	}
-
-// 	if (nb_params > 2) {
-// 		strb = strtoul(params[9], &c, 0);
-// 		if (*c != 0) {
-// 			printf("Incorrect strb");
-// 			return;
-// 		}
-// 	}
-// 	hbm_writeread_fsm(data1, data2, data3, data4, data5, data6, data7, data8, address, strb);
-// }
-// define_command(hbm_writeread_fsm, hbm_writeread_hbm_test, "Write once to hbm", LITEDRAM_CMDS);
-// #endif
-
-/**
- * Command "hbm_gen_tester"
- * 
- * Run the generator once
- * 
-*/
-#if defined(CSR_HBM_GENERATOR_BASE)
-static void hbm_gen_tester_handler(int nb_params, char **params)
-{
-	char *c;
-	int burst_length;
-	// Random turned to 0
-	if (nb_params < 1) {
-		printf("hbm_gen <burst_length>");
-		return;
-	} 
-	burst_length = strtoul(params[0], &c, 0);
-	if (*c != 0) {
-		printf("Incorrect burst_length");
-		return;
-	}
-	hbm_gen(burst_length);
-}
-define_command(hbm_gen, hbm_gen_tester_handler, "Single test for hbm writer", LITEDRAM_CMDS);
-#endif
-
 
 /**
  * Command "sdram_bist"
@@ -600,3 +412,25 @@ define_command(sdram_spd, sdram_spd_handler, "Read SDRAM SPD EEPROM", LITEDRAM_C
 #ifdef SDRAM_DEBUG
 define_command(sdram_debug, sdram_debug, "Run SDRAM debug tests", LITEDRAM_CMDS);
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
