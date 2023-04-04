@@ -49,7 +49,6 @@ static void hbm_read_set(int nb_params, char **params)
                "[delay val: 32-bit signal, number of clock cycles to delay reads/writes(default=0)]\n"
                "[address: 28-bit signal (<< 5), starting address of beginning port (default=0x0)]\n"
                "[address offset: 28-bit signal (<< 5), incremented address for every other port (default=0x800000)]\n"
-               "[data pattern: 32-bit signal, data pattern to write (default=0xa5a5a5a5)]\n"
                "\nNote: Addresses in fsm are 33 bit signals, lower 5 bits are not used.\n");
 		return;
 	}
@@ -59,16 +58,16 @@ static void hbm_read_set(int nb_params, char **params)
 		return;
 	}
     if (nb_params > 1) {
-		delay_cycles = strtoul(params[1], &c, 0);
+		port_mask = strtoul(params[1], &c, 0);
 		if (*c != 0) {
-			printf("Incorrect delay_cycles");
+			printf("Incorrect port_mask");
 			return;
 		}
 	}
 	if (nb_params > 2) {
-		port_mask = strtoul(params[2], &c, 0);
+		delay_cycles = strtoul(params[2], &c, 0);
 		if (*c != 0) {
-			printf("Incorrect port_mask");
+			printf("Incorrect delay_cycles");
 			return;
 		}
 	}
@@ -107,7 +106,7 @@ static void hbm_write_set(int nb_params, char **params)
     uint32_t addr_offset = 0x800000;
     uint32_t data_pattern = 0xa5a5a5a5;
 	if (nb_params < 1) {
-		printf("hbm_read \n"
+		printf("hbm_write_set \n"
                "<bytes: Number of bytes to write (continuously)>\n"
                "[port mask: 32-bit signal, each bit representing a port to enable (default=0xffffffff)]\n"
                "[delay val: 32-bit signal, number of clock cycles to delay reads/writes(default=0)]\n"
@@ -123,16 +122,16 @@ static void hbm_write_set(int nb_params, char **params)
 		return;
 	}
     if (nb_params > 1) {
-		delay_cycles = strtoul(params[1], &c, 0);
+		port_mask = strtoul(params[1], &c, 0);
 		if (*c != 0) {
-			printf("Incorrect delay_cycles");
+			printf("Incorrect port_mask");
 			return;
 		}
 	}
 	if (nb_params > 2) {
-		port_mask = strtoul(params[2], &c, 0);
+		delay_cycles = strtoul(params[2], &c, 0);
 		if (*c != 0) {
-			printf("Incorrect port_mask");
+			printf("Incorrect delay_cycles");
 			return;
 		}
 	}

@@ -1,4 +1,3 @@
-
 #include <generated/csr.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -698,6 +697,8 @@ void hbm_test_finish(void) {
             func_running_flag += exec_done[i]();
         }
     }
+
+    commonRegs_ports_mask_write(0);
 
     printf("Stopped all hbm ports\n");
 }
