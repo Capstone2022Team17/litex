@@ -22,8 +22,6 @@ from litex.gen.fhdl.hierarchy import LiteXHierarchyExplorer
 
 from litex.compat.soc_core import *
 
-from litex.soc.cores import cpu
-
 from litex.soc.interconnect.csr import *
 from litex.soc.interconnect.csr_eventmanager import *
 from litex.soc.interconnect import csr_bus
@@ -254,12 +252,13 @@ class SoCBusHandler(LiteXModule):
             search_regions = {"main": SoCRegion(origin=0x00000000, size=2**self.address_width-1)}
 
         # Iterate on Search_Regions to find a Candidate.
+        size_pow2 = 2**log2_int(size, False)
         for _, search_region in search_regions.items():
             origin = search_region.origin
             while (origin + size) < (search_region.origin + search_region.size_pow2):
                 # Align Origin on Size.
-                if (origin%size):
-                    origin += (size - origin%size)
+                if (origin%size_pow2):
+                    origin += (size_pow2 - origin%size_pow2)
                     continue
                 # Create a Candidate.
                 candidate = SoCRegion(origin=origin, size=size, cached=cached)
@@ -1011,6 +1010,8 @@ class SoC(LiteXModule, SoCCoreCompat):
         self.add_config("CSR_ALIGNMENT",  self.csr.alignment)
 
     def add_cpu(self, name="vexriscv", variant="standard", reset_address=None, cfu=None):
+        from litex.soc.cores import cpu
+
         # Check that CPU is supported.
         if name not in cpu.CPUS.keys():
             supported_cpus = []
@@ -1095,6 +1096,8 @@ class SoC(LiteXModule, SoCCoreCompat):
                     colorer(name, color="underline"),
                     colorer("adding", color="cyan")))
                 self.irq.enable()
+                if hasattr(self.cpu, "reserved_interrupts"):
+                    self.cpu.interrupts.update(self.cpu.reserved_interrupts)
                 for name, loc in self.cpu.interrupts.items():
                     self.irq.add(name, loc)
                 self.add_config("CPU_HAS_INTERRUPT")
@@ -1129,7 +1132,7 @@ class SoC(LiteXModule, SoCCoreCompat):
             self.logger.info("CPU {} {} SoC components.".format(
                 colorer(name, color="underline"),
                 colorer("adding", color="cyan")))
-            self.cpu.add_soc_components(soc=self, soc_region_cls=SoCRegion) # FIXME: avoid passing SoCRegion.
+            self.cpu.add_soc_components(soc=self)
 
         # Add constants.
         self.add_config(f"CPU_TYPE_{name}")
@@ -1956,9 +1959,12 @@ class LiteXSoC(SoC):
     # Add PCIe -------------------------------------------------------------------------------------
     def add_pcie(self, name="pcie", phy=None, ndmas=0, max_pending_requests=8, address_width=32,
         with_dma_buffering = True, dma_buffering_depth=1024,
-        with_dma_loopback  = True,
-        with_msi           = True,
-        with_synchronizer  = False):
+        with_dma_loopback     = True,
+        with_dma_synchronizer = False,
+        with_dma_monitor      = False,
+        with_dma_status       = False,
+        with_msi              = True,
+):
         # Imports
         from litepcie.core import LitePCIeEndpoint, LitePCIeMSI
         from litepcie.frontend.dma import LitePCIeDMA
@@ -1997,7 +2003,9 @@ class LiteXSoC(SoC):
             dma = LitePCIeDMA(phy, endpoint,
                 with_buffering    = with_dma_buffering, buffering_depth=dma_buffering_depth,
                 with_loopback     = with_dma_loopback,
-                with_synchronizer = with_synchronizer,
+                with_synchronizer = with_dma_synchronizer,
+                with_monitor      = with_dma_monitor,
+                with_status       = with_dma_status,
                 address_width     = address_width
             )
             setattr(self, f"{name}_dma{i}", dma)
@@ -2084,7 +2092,14 @@ class LiteXSoC(SoC):
 
         # Video FrameBuffer.
         timings = timings if isinstance(timings, str) else timings[0]
-        base = self.mem_map.get(name, 0x40c00000)
+        base = self.mem_map.get(name, None)
+        if base is None:
+            self.bus.add_region(name, SoCRegion(
+                origin = 0x40c00000,
+                size   = 0x800000,
+                linker = True)
+            )
+            base = self.bus.regions[name].origin
         hres = int(timings.split("@")[0].split("x")[0])
         vres = int(timings.split("@")[0].split("x")[1])
         vfb = VideoFrameBuffer(self.sdram.crossbar.get_port(),

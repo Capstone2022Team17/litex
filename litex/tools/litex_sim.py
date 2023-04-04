@@ -6,6 +6,7 @@
 # Copyright (c) 2015-2020 Florent Kermarrec <florent@enjoy-digital.fr>
 # Copyright (c) 2020 Antmicro <www.antmicro.com>
 # Copyright (c) 2017 Pierre-Olivier Vauboin <po@lambdaconcept>
+# Copyright (c) 2023 Victor Suarez Rovere <suarezvictor@gmail.com>
 # SPDX-License-Identifier: BSD-2-Clause
 
 import sys
@@ -41,6 +42,8 @@ from liteeth.core.icmp import LiteEthICMP
 from liteeth.core import LiteEthUDPIPCore
 from liteeth.frontend.etherbone import LiteEthEtherbone
 from liteeth.common import *
+
+from litex.soc.cores.video import VideoGenericPHY
 
 from litescope import LiteScopeAnalyzer
 
@@ -124,6 +127,16 @@ _io = [
         Subsignal("oe", Pins(32)),
         Subsignal("o",  Pins(32)),
         Subsignal("i",  Pins(32)),
+    ),
+
+    # Video (VGA).
+    ("vga", 0,
+        Subsignal("hsync", Pins(1)),
+        Subsignal("vsync", Pins(1)),
+        Subsignal("de",    Pins(1)),
+        Subsignal("r",     Pins(8)),
+        Subsignal("g",     Pins(8)),
+        Subsignal("b",     Pins(8)),
     )
 ]
 
@@ -155,6 +168,8 @@ class SimSoC(SoCCore):
         with_spi_flash        = False,
         spi_flash_init        = [],
         with_gpio             = False,
+        with_video_framebuffer = False,
+        with_video_terminal = False,
         sim_debug             = False,
         trace_reset_on        = False,
         **kwargs):
@@ -228,9 +243,9 @@ class SimSoC(SoCCore):
                 hw_mac     = etherbone_mac_address)
 
             # SoftCPU
-            ethmac_region_size = (ethmac.rx_slots.constant + ethmac.tx_slots.constant)*ethmac.slot_size.constant
+            ethmac_region_size = (self.ethmac.rx_slots.constant + self.ethmac.tx_slots.constant)*self.ethmac.slot_size.constant
             ethmac_region = SoCRegion(origin=self.mem_map.get("ethmac", None), size=ethmac_region_size, cached=False)
-            self.bus.add_slave(name="ethmac", slave=ethmac.bus, region=ethmac_region)
+            self.bus.add_slave(name="ethmac", slave=self.ethmac.bus, region=ethmac_region)
             if self.irq.enabled:
                 self.irq.add("ethmac", use_loc_if_exists=True)
             # HW ethernet
@@ -290,6 +305,17 @@ class SimSoC(SoCCore):
         if with_gpio:
             self.gpio = GPIOTristate(platform.request("gpio"), with_irq=True)
             self.irq.add("gpio", use_loc_if_exists=True)
+
+        # Video Framebuffer ------------------------------------------------------------------------
+        if with_video_framebuffer:
+            video_pads = platform.request("vga")
+            self.submodules.videophy = VideoGenericPHY(video_pads)
+            self.add_video_framebuffer(phy=self.videophy, timings="640x480@60Hz", format="rgb888")
+
+        # Video Terminal ---------------------------------------------------------------------------
+        if with_video_terminal:
+            self.submodules.videophy = VideoGenericPHY(platform.request("vga"))
+            self.add_video_terminal(phy=self.videophy, timings="640x480@60Hz")
 
         # Simulation debugging ----------------------------------------------------------------------
         if sim_debug:
@@ -400,6 +426,10 @@ def sim_args(parser):
     # Analyzer.
     parser.add_argument("--with-analyzer",        action="store_true",     help="Enable Analyzer support.")
 
+    # Video.
+    parser.add_argument("--with-video-framebuffer", action="store_true",   help="Enable Video Framebuffer.")
+    parser.add_argument("--with-video-terminal",    action="store_true",   help="Enable Video Terminal.")
+
     # Debug/Waveform.
     parser.add_argument("--sim-debug",            action="store_true",     help="Add simulation debugging modules.")
     parser.add_argument("--gtkwave-savefile",     action="store_true",     help="Generate GTKWave savefile.")
@@ -476,21 +506,27 @@ def main():
     if args.with_i2c:
         sim_config.add_module("spdeeprom", "i2c")
 
+    # Video.
+    if args.with_video_framebuffer or args.with_video_terminal:
+        sim_config.add_module("video", "vga")
+
     # SoC ------------------------------------------------------------------------------------------
     soc = SimSoC(
-        with_sdram         = args.with_sdram,
-        with_sdram_bist    = args.with_sdram_bist,
-        with_ethernet      = args.with_ethernet,
-        ethernet_phy_model = args.ethernet_phy_model,
-        with_etherbone     = args.with_etherbone,
-        with_analyzer      = args.with_analyzer,
-        with_i2c           = args.with_i2c,
-        with_sdcard        = args.with_sdcard,
-        with_spi_flash     = args.with_spi_flash,
-        with_gpio          = args.with_gpio,
-        sim_debug          = args.sim_debug,
-        trace_reset_on     = int(float(args.trace_start)) > 0 or int(float(args.trace_end)) > 0,
-        spi_flash_init     = None if args.spi_flash_init is None else get_mem_data(args.spi_flash_init, endianness="big"),
+        with_sdram             = args.with_sdram,
+        with_sdram_bist        = args.with_sdram_bist,
+        with_ethernet          = args.with_ethernet,
+        ethernet_phy_model     = args.ethernet_phy_model,
+        with_etherbone         = args.with_etherbone,
+        with_analyzer          = args.with_analyzer,
+        with_i2c               = args.with_i2c,
+        with_sdcard            = args.with_sdcard,
+        with_spi_flash         = args.with_spi_flash,
+        with_gpio              = args.with_gpio,
+        with_video_framebuffer = args.with_video_framebuffer,
+        with_video_terminal    = args.with_video_terminal,
+        sim_debug              = args.sim_debug,
+        trace_reset_on         = int(float(args.trace_start)) > 0 or int(float(args.trace_end)) > 0,
+        spi_flash_init         = None if args.spi_flash_init is None else get_mem_data(args.spi_flash_init, endianness="big"),
         **soc_kwargs)
     if ram_boot_address is not None:
         if ram_boot_address == 0:
@@ -508,11 +544,10 @@ def main():
             generate_gtkw_savefile(builder, vns, args.trace_fst)
 
     builder = Builder(soc, **parser.builder_argdict)
-    print(parser.builder_argdict)
-
     builder.build(
         sim_config       = sim_config,
         interactive      = not args.non_interactive,
+        video            = args.with_video_framebuffer or args.with_video_terminal,
         pre_run_callback = pre_run_callback,
         **parser.toolchain_argdict,
     )
