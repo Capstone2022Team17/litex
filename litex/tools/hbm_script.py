@@ -6,6 +6,8 @@ import sys
 import os
 import serial
 import argparse
+import webbrowser
+
 
 import dearpygui.dearpygui as dpg
 import csv
@@ -24,13 +26,13 @@ class ValueHolder:
         
     def run_cmd(self, sender, app_data, scripter):
         cmd = dpg.get_item_label(sender)
-        bytes = dpg.get_value(self.bytes)
+        bytes_field = dpg.get_value(self.bytes)
         mask = dpg.get_value(self.mask)
         delay = dpg.get_value(self.delay)
         addr = dpg.get_value(self.addr)
         offset = dpg.get_value(self.offset)
         pattern = dpg.get_value(self.pattern)
-        if bytes == "":
+        if bytes_field == "":
             print("No bytes given...")
             return
         if mask == "":
@@ -47,7 +49,7 @@ class ValueHolder:
             offset = hex(num_offset)
         if pattern == "":
             pattern = "0xa5a5a5a5"
-        str_cmd = f"{cmd} {bytes} {mask} {delay} {addr} {offset} {pattern}\n"
+        str_cmd = f"{cmd} {bytes_field} {mask} {delay} {addr} {offset} {pattern}\n"
         command = str_cmd.encode("ascii")
         scripter.write(command)
         reading = True
@@ -121,6 +123,8 @@ class ValueHolder:
             dpg.set_axis_limits("x_axis", max([max(x_vals)-10, 0]), max(x_vals))
             dpg.set_axis_limits("y_axis", 0, int(max(y_vals)*1.3))
 
+def open_help_link():
+    webbrowser.open("https://github.com/Capstone2022Team17/drgbl/wiki")
 
 class Scripter:
     def __init__(self, channel, port, filein=None, fileout=None, gui_on=False):
@@ -205,35 +209,78 @@ def main():
 
     if args.mode == "gui":
         dpg.create_context()
-        dpg.create_viewport(width=700, height=700)
+        dpg.create_viewport(width=1000, height=1000)
         dpg.setup_dearpygui()
 
-        with dpg.window(tag="Primary Window", label="My First GUI"):
+        with dpg.window(tag="Primary Window", label="HBM Testing"):
             
-            bytes = dpg.add_input_text(label="# Bytes")
-            mask = dpg.add_input_text(label="Port Mask")
-            delay = dpg.add_input_text(label="Delay") 
-            addr = dpg.add_input_text(label="Starting Address")
-            offset = dpg.add_input_text(label="Address Offset")
-            pattern = dpg.add_input_text(label="Data Pattern")
+            with dpg.group():
+                width, height, channels, data = dpg.load_image("litex/litex/tools/icon.png")
+                with dpg.texture_registry(show=True):
+                    dpg.add_static_texture(width=width, height=height, default_value=data, tag="texture_tag")
+                dpg.add_image_button("texture_tag", callback=open_help_link, height=100, width=100, pos=[900, 0])
+
+            bytes_field = dpg.add_input_text(label="# Bytes", tag="bytes_text")
+            mask = dpg.add_input_text(label="Port Mask", tag="mask_text")
+            delay = dpg.add_input_text(label="Delay", tag="delay_text") 
+            addr = dpg.add_input_text(label="Starting Address", tag="address_text")
+            offset = dpg.add_input_text(label="Address Offset", tag="offset_text")
+            pattern = dpg.add_input_text(label="Data Pattern", tag="data_text")
             
             
-            my_vals = ValueHolder(addr, offset, mask, bytes, delay, pattern)
+            my_vals = ValueHolder(addr, offset, mask, bytes_field, delay, pattern)
             with dpg.group(horizontal=True):
-                dpg.add_button(label="hbm_read_set", callback=my_vals.run_cmd, user_data=script_runner)
-                dpg.add_button(label="hbm_write_set", callback=my_vals.run_cmd, user_data=script_runner)
+                dpg.add_button(label="hbm_read_set", callback=my_vals.run_cmd, user_data=script_runner, tag="read_button")
+                dpg.add_button(label="hbm_write_set", callback=my_vals.run_cmd, user_data=script_runner, tag="write_button")
             with dpg.group(horizontal=True):    
-                dpg.add_button(label="Start", callback=my_vals.start_test, user_data=script_runner)
-                dpg.add_button(label="Get Data", callback=my_vals.get_data, user_data=script_runner)
-                dpg.add_button(label="Finish", callback=my_vals.finish_test, user_data=script_runner)
+                dpg.add_button(label="Start", callback=my_vals.start_test, user_data=script_runner, tag="start_button")
+                dpg.add_button(label="Get Data", callback=my_vals.get_data, user_data=script_runner, tag="data_button")
+                dpg.add_button(label="Finish", callback=my_vals.finish_test, user_data=script_runner, tag="finish_button")
                 dpg.add_button(label="Start Collecting", tag="collector", callback=my_vals.auto_collect, user_data=script_runner)
+
+
+            with dpg.tooltip("bytes_text"):
+                dpg.add_text("Number of bytes to read/write per transaction")
+
+            with dpg.tooltip("mask_text"):
+                dpg.add_text("Ports to assign to read/write encoded as binary stream")
+
+            with dpg.tooltip("delay_text"):
+                dpg.add_text("Delay time between transaction in cycles")
+
+            with dpg.tooltip("address_text"):
+                dpg.add_text("Starting address for first read/write")
+
+            with dpg.tooltip("offset_text"):
+                dpg.add_text("Address offset between subsequent reads/writes")
+
+            with dpg.tooltip("data_text"):
+                dpg.add_text("Data byte pattern for writes")
+
+            with dpg.tooltip("read_button"):
+                dpg.add_text("Assign selected ports to read with selected settings")
+
+            with dpg.tooltip("write_button"):
+                dpg.add_text("Assign selected ports to write with selected settings")
+
+            with dpg.tooltip("start_button"):
+                dpg.add_text("Start transactions on all assigned ports")
+
+            with dpg.tooltip("data_button"):
+                dpg.add_text("Pause transactions and sample throughput")
+
+            with dpg.tooltip("finish_button"):
+                dpg.add_text("Stop all ports")
+
+            with dpg.tooltip("collector"):
+                dpg.add_text("Collect files every six seconds for one minute")
 
             radio_list = ["Total"]
             radio_list.extend([str(i) for i in range(32)])
             with dpg.child_window(horizontal_scrollbar=True, height=50):
                 dpg.add_radio_button(items=tuple(radio_list), tag='graph_radio', default_value="Total", callback=my_vals.updateSeries, horizontal=True)
             # create plot
-            with dpg.plot(label="Line Series", height=400, width=400, tag="plot"):
+            with dpg.plot(label="Line Series", height=750, width=1300, tag="plot"):
                 dpg.add_plot_axis(dpg.mvXAxis, label="Sample #", tag="x_axis")
                 dpg.add_plot_axis(dpg.mvYAxis, label="GiB/s", tag="y_axis")
                 
