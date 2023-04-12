@@ -209,21 +209,33 @@ def main():
 
     if args.mode == "gui":
         dpg.create_context()
-        dpg.create_viewport(width=1000, height=1000)
+        dpg.create_viewport(width=610, height=700)
         dpg.setup_dearpygui()
 
         with dpg.window(tag="Primary Window", label="HBM Testing"):
             
-            with dpg.group():
-                width, height, channels, data = dpg.load_image("litex/litex/tools/icon.png")
-                with dpg.texture_registry(show=True):
-                    dpg.add_static_texture(width=width, height=height, default_value=data, tag="texture_tag")
-                dpg.add_image_button("texture_tag", callback=open_help_link, height=100, width=100, pos=[900, 0])
+            with dpg.group(horizontal=True):
+                with dpg.group():
+                    bytes_field = dpg.add_input_text(label="# Bytes", tag="bytes_text")
+                    mask = dpg.add_input_text(label="Port Mask", tag="mask_text")
 
-            bytes_field = dpg.add_input_text(label="# Bytes", tag="bytes_text")
-            mask = dpg.add_input_text(label="Port Mask", tag="mask_text")
-            delay = dpg.add_input_text(label="Delay", tag="delay_text") 
-            addr = dpg.add_input_text(label="Starting Address", tag="address_text")
+                width, height, channels, data = dpg.load_image("litex/litex/tools/icon.png")
+                with dpg.texture_registry(show=False):
+                    dpg.add_static_texture(width=width, height=height, default_value=data, tag="texture_tag")
+                dpg.add_image_button("texture_tag", callback=open_help_link, height=40, width=40, pos=[550, 0])
+
+
+            with dpg.group(horizontal=True):
+                with dpg.group():    
+                    delay = dpg.add_input_text(label="Delay", tag="delay_text") 
+                    addr = dpg.add_input_text(label="Starting Address", tag="address_text")
+                width, height, channels, data = dpg.load_image("litex/litex/tools/DRGBL_Logo.png")
+                with dpg.texture_registry(show=False):
+                    dpg.add_static_texture(width=width, height=height, default_value=data, tag="drgbl_logo")
+                dpg.add_image("drgbl_logo", height=20, width=40, pos=[554, 50])
+
+
+
             offset = dpg.add_input_text(label="Address Offset", tag="offset_text")
             pattern = dpg.add_input_text(label="Data Pattern", tag="data_text")
             
@@ -280,7 +292,7 @@ def main():
             with dpg.child_window(horizontal_scrollbar=True, height=50):
                 dpg.add_radio_button(items=tuple(radio_list), tag='graph_radio', default_value="Total", callback=my_vals.updateSeries, horizontal=True)
             # create plot
-            with dpg.plot(label="Line Series", height=750, width=1300, tag="plot"):
+            with dpg.plot(label="Line Series", height=400, width=400, tag="plot"):
                 dpg.add_plot_axis(dpg.mvXAxis, label="Sample #", tag="x_axis")
                 dpg.add_plot_axis(dpg.mvYAxis, label="GiB/s", tag="y_axis")
                 
